@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automonkeytype"
+version = "0.1.0"
+description = "Human-like typing automation for monkeytype.com"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.10"
+authors = [{ name = "jasperan" }]
+keywords = ["monkeytype", "typing", "automation", "playwright"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment",
+]
+dependencies = [
+    "playwright>=1.40",
+    "click>=8.0",
+]
+
+[project.scripts]
+automonkeytype = "automonkeytype.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jasperan/automonkeytype"
+Repository = "https://github.com/jasperan/automonkeytype"
+
+[tool.setuptools.packages.find]
+include = ["automonkeytype*"]

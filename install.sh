@@ -3,7 +3,6 @@ set -euo pipefail
 
 # ============================================================
 # automonkeytype — One-Command Installer
-# automonkeytype
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/jasperan/automonkeytype/main/install.sh | bash
@@ -36,7 +35,7 @@ print_banner() {
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BOLD}  automonkeytype${NC}"
-    echo -e "  automonkeytype"
+    echo -e "  Human-like typing automation for monkeytype.com"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }
@@ -57,11 +56,31 @@ check_prereqs() {
     info "Checking prerequisites..."
     command_exists git || fail "Git is required — https://git-scm.com/"
     success "Git $(git --version | cut -d' ' -f3)"
+
+    if command_exists python3; then
+        success "Python $(python3 --version | cut -d' ' -f2)"
+    elif command_exists python; then
+        success "Python $(python --version | cut -d' ' -f2)"
+    else
+        fail "Python 3.10+ is required — https://www.python.org/"
+    fi
 }
 
 install_deps() {
     cd "$INSTALL_DIR"
-    success "No additional dependencies to install"
+
+    info "Installing Python package..."
+    pip install -e . 2>/dev/null || pip3 install -e . 2>/dev/null || {
+        warn "pip install failed — trying with --user flag"
+        pip install --user -e . 2>/dev/null || pip3 install --user -e . 2>/dev/null || fail "Could not install Python dependencies."
+    }
+    success "Python package installed"
+
+    info "Installing Playwright browser (Chromium)..."
+    python -m playwright install chromium 2>/dev/null || python3 -m playwright install chromium 2>/dev/null || {
+        warn "Playwright browser install failed — you may need to run: playwright install chromium"
+    }
+    success "Playwright Chromium ready"
 }
 
 main() {
@@ -79,7 +98,8 @@ print_done() {
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     echo -e "  ${BOLD}Location:${NC}  $INSTALL_DIR"
-    echo -e "  ${BOLD}Next:${NC}     See README.md for usage instructions"
+    echo -e "  ${BOLD}Run:${NC}      automonkeytype --wpm 100"
+    echo -e "  ${BOLD}Help:${NC}     automonkeytype --help"
     echo ""
 }
 
