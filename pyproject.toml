@@ -36,3 +36,10 @@ Repository = "https://github.com/jasperan/automonkeytype"
 
 [tool.setuptools.packages.find]
 include = ["automonkeytype*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: browser-backed tests against the local MonkeyType fixture",
+    "live: opt-in smoke tests against live monkeytype.com",
+    "slow: slower browser-backed checks",
+]

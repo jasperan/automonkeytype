@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MonkeyType Fixture</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: #111827;
+        color: #f9fafb;
+      }
+
+      #controls {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      button {
+        background: #374151;
+        border: 1px solid #4b5563;
+        color: #f9fafb;
+        border-radius: 6px;
+        cursor: pointer;
+        padding: 8px 12px;
+      }
+
+      #words {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        line-height: 1.8;
+        min-height: 96px;
+        padding: 16px;
+        border: 1px solid #374151;
+        border-radius: 8px;
+      }
+
+      .word {
+        display: inline-flex;
+        gap: 1px;
+        opacity: 0.6;
+      }
+
+      .word.active {
+        opacity: 1;
+        color: #fbbf24;
+      }
+
+      #result {
+        display: none;
+        margin-top: 24px;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      #result .group {
+        margin-bottom: 8px;
+      }
+
+      #result .label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+      }
+
+      #hidden-input {
+        position: absolute;
+        left: -9999px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <button mode="words" type="button">words</button>
+      <button wordCount="10" type="button">10</button>
+      <button wordCount="50" type="button">50</button>
+      <button id="restartTestButton" type="button">restart</button>
+    </div>
+
+    <input id="hidden-input" aria-label="typing input" />
+    <div id="words" tabindex="0"></div>
+    <div id="result">
+      <div class="group wpm">
+        <div class="label">wpm</div>
+        <div class="bottom"></div>
+      </div>
+      <div class="group acc">
+        <div class="label">accuracy</div>
+        <div class="bottom"></div>
+      </div>
+      <div class="group raw">
+        <div class="label">raw wpm</div>
+        <div class="bottom"></div>
+      </div>
+      <div class="group key">
+        <div class="label">characters</div>
+        <div class="bottom"></div>
+      </div>
+    </div>
+
+    <script>
+      const WORD_SETS = {
+        "10": [
+          "alpha",
+          "beta",
+          "gamma",
+          "delta",
+          "epsilon",
+          "zeta",
+          "eta",
+          "theta",
+          "iota",
+          "kappa",
+        ],
+        "50": [
+          "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa",
+          "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon",
+          "phi", "chi", "psi", "omega", "aurora", "binary", "cipher", "drift", "ember", "flux",
+          "glimmer", "harbor", "island", "jungle", "keystone", "lantern", "meadow", "nectar", "orbit", "prairie",
+          "quartz", "ripple", "summit", "thunder", "utopia", "velvet", "willow", "xenon", "yonder", "zephyr",
+        ],
+      };
+
+      const hiddenInput = document.getElementById("hidden-input");
+      const wordsElement = document.getElementById("words");
+      const resultElement = document.getElementById("result");
+      const resultWpm = document.querySelector("#result .group.wpm .bottom");
+      const resultAcc = document.querySelector("#result .group.acc .bottom");
+      const resultRaw = document.querySelector("#result .group.raw .bottom");
+      const resultChars = document.querySelector("#result .group.key .bottom");
+
+      let wordCount = "10";
+      let words = [];
+      let activeIndex = 0;
+      let typedBuffer = "";
+      let startedAt = null;
+      let finishedAt = null;
+      let stats = resetStats();
+
+      function resetStats() {
+        return {
+          correct: 0,
+          incorrect: 0,
+          extra: 0,
+          missed: 0,
+        };
+      }
+
+      function isLastWord() {
+        return activeIndex === words.length - 1;
+      }
+
+      function currentWord() {
+        return words[activeIndex] || "";
+      }
+
+      function renderWords() {
+        wordsElement.innerHTML = "";
+        words.forEach((word, index) => {
+          const wordNode = document.createElement("div");
+          wordNode.className = `word${index === activeIndex ? " active" : ""}`;
+
+          for (const char of word) {
+            const letter = document.createElement("letter");
+            letter.textContent = char;
+            wordNode.appendChild(letter);
+          }
+
+          wordsElement.appendChild(wordNode);
+        });
+      }
+
+      function updateActiveWord() {
+        const wordNodes = document.querySelectorAll("#words .word");
+        wordNodes.forEach((node, index) => {
+          node.classList.toggle("active", index === activeIndex);
+        });
+      }
+
+      function showResults() {
+        const endTime = finishedAt ?? performance.now();
+        const startTime = startedAt ?? endTime;
+        const elapsedMinutes = Math.max((endTime - startTime) / 60000, 1 / 60000);
+        const grossChars = stats.correct + stats.incorrect + stats.extra;
+        const rawWpm = grossChars / 5 / elapsedMinutes;
+        const measuredChars = Math.max(0, stats.correct - stats.incorrect - stats.missed);
+        const wpm = measuredChars / 5 / elapsedMinutes;
+        const accuracy = grossChars === 0 ? 100 : Math.round((stats.correct / grossChars) * 100);
+
+        resultWpm.textContent = Math.round(wpm).toString();
+        resultAcc.textContent = `${accuracy}%`;
+        resultRaw.textContent = Math.round(rawWpm).toString();
+        resultChars.textContent = `${stats.correct}/${stats.incorrect}/${stats.extra}/${stats.missed}`;
+        resultElement.style.display = "block";
+      }
+
+      function finishTest() {
+        finishedAt = performance.now();
+        showResults();
+      }
+
+      function recordWord(finalWord) {
+        const expected = currentWord();
+        const overlap = Math.min(expected.length, typedBuffer.length);
+
+        for (let index = 0; index < overlap; index += 1) {
+          if (expected[index] === typedBuffer[index]) {
+            stats.correct += 1;
+          } else {
+            stats.incorrect += 1;
+          }
+        }
+
+        if (typedBuffer.length > expected.length) {
+          stats.extra += typedBuffer.length - expected.length;
+        }
+
+        if (expected.length > typedBuffer.length) {
+          stats.missed += expected.length - typedBuffer.length;
+        }
+
+        if (!finalWord) {
+          stats.correct += 1;
+        }
+
+        typedBuffer = "";
+        activeIndex += 1;
+
+        if (activeIndex >= words.length) {
+          finishTest();
+        } else {
+          updateActiveWord();
+        }
+      }
+
+      function resetTest() {
+        words = [...WORD_SETS[wordCount]];
+        activeIndex = 0;
+        typedBuffer = "";
+        startedAt = null;
+        finishedAt = null;
+        stats = resetStats();
+        resultElement.style.display = "none";
+        renderWords();
+      }
+
+      document.querySelectorAll("button[wordCount]").forEach((button) => {
+        button.addEventListener("click", () => {
+          wordCount = button.getAttribute("wordCount") || "10";
+          resetTest();
+        });
+      });
+
+      document.querySelectorAll("button[mode]").forEach((button) => {
+        button.addEventListener("click", () => {
+          resetTest();
+        });
+      });
+
+      document.getElementById("restartTestButton").addEventListener("click", resetTest);
+      wordsElement.addEventListener("click", () => hiddenInput.focus());
+
+      hiddenInput.addEventListener("keydown", (event) => {
+        if (resultElement.style.display !== "none") {
+          return;
+        }
+
+        if (startedAt === null && (event.key.length === 1 || event.code === "Space")) {
+          startedAt = performance.now();
+        }
+
+        if (event.key === "Tab") {
+          event.preventDefault();
+          resetTest();
+          return;
+        }
+
+        if (event.key === "Backspace") {
+          event.preventDefault();
+          typedBuffer = typedBuffer.slice(0, -1);
+          return;
+        }
+
+        if (event.code === "Space" || event.key === " ") {
+          event.preventDefault();
+          if (!isLastWord()) {
+            recordWord(false);
+          }
+          return;
+        }
+
+        if (event.key.length === 1) {
+          event.preventDefault();
+          typedBuffer += event.key;
+
+          if (isLastWord() && typedBuffer.length >= currentWord().length) {
+            recordWord(true);
+          }
+        }
+      });
+
+      resetTest();
+    </script>
+  </body>
+</html>
