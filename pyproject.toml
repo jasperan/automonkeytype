@@ -43,3 +43,5 @@ markers = [
     "live: opt-in smoke tests against live monkeytype.com",
     "slow: slower browser-backed checks",
 ]
+
+[tool.uv]
