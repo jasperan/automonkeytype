@@ -44,7 +44,12 @@ class WPMController:
         self._char_count += 1
 
     def get_current_wpm(self) -> float:
-        """Calculate WPM from the rolling window."""
+        """Calculate WPM from the rolling window.
+
+        Returns ``target_wpm`` (not 0) before enough samples exist so the PID
+        error stays neutral and the loop doesn't slam the multiplier until the
+        window fills.
+        """
         if len(self._timestamps) < 2:
             return self.target_wpm
         elapsed = self._timestamps[-1] - self._timestamps[0]

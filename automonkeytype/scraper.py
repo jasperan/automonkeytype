@@ -53,6 +53,21 @@ class MonkeyTypeScraper:
     SEL_TIMECOUNT_BTN = 'button[timeCount="{value}"]'
     SEL_RESTART_BTN = "#restartTestButton"
 
+    # Maps a test mode to the value-button selector template that mode uses.
+    # Modes without a value group (quote, zen, custom) map to None.
+    VALUE_BTN_TEMPLATES = {
+        "words": SEL_WORDCOUNT_BTN,
+        "time": SEL_TIMECOUNT_BTN,
+    }
+
+    # Results selectors keyed by the dict key get_results() returns.
+    RESULT_SELECTORS = {
+        "wpm": SEL_RESULT_WPM,
+        "accuracy": SEL_RESULT_ACC,
+        "raw_wpm": SEL_RESULT_RAW,
+        "characters": SEL_RESULT_CHARS,
+    }
+
     def __init__(self, page: Page):
         self.page = page
 
@@ -88,14 +103,20 @@ class MonkeyTypeScraper:
             btn.click()
             time.sleep(0.5)
 
-        # Click value button
-        for template in (self.SEL_WORDCOUNT_BTN, self.SEL_TIMECOUNT_BTN):
+        # Click value button — derive the template from the mode rather than
+        # probing both groups (MonkeyType keeps both in the DOM, just hidden).
+        template = self.VALUE_BTN_TEMPLATES.get(mode)
+        if template is not None:
             val_sel = template.format(value=value)
             btn = self.page.query_selector(val_sel)
             if btn:
                 btn.click()
                 time.sleep(0.5)
-                break
+            else:
+                print(
+                    f"[automonkeytype] Warning: no '{mode}' value button "
+                    f"matched value '{value}' ({val_sel}); using site default."
+                )
 
     def restart_test(self):
         """Press the restart button (Tab key works too)."""
@@ -163,13 +184,7 @@ class MonkeyTypeScraper:
     def get_results(self) -> Dict[str, str]:
         """Scrape the results page after test completion."""
         results = {}
-        selectors = {
-            "wpm": self.SEL_RESULT_WPM,
-            "accuracy": self.SEL_RESULT_ACC,
-            "raw_wpm": self.SEL_RESULT_RAW,
-            "characters": self.SEL_RESULT_CHARS,
-        }
-        for key, sel in selectors.items():
+        for key, sel in self.RESULT_SELECTORS.items():
             el = self.page.query_selector(sel)
             if el:
                 results[key] = (el.text_content() or "").strip()

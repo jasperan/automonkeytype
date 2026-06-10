@@ -10,6 +10,7 @@ Produces inter-key delays that model realistic human typing dynamics:
 """
 
 import random
+from collections import deque
 from typing import Optional
 
 from .keyboard import (
@@ -59,7 +60,8 @@ class TypingHumanizer:
         # consistency 0-1: higher = less variance in timing
         self.noise_stddev = self.base_delay * (1.0 - consistency) * 0.5
         self.chars_typed = 0
-        self._recent_chars: list = []  # last 3 chars for trigram detection
+        # last 3 chars for trigram detection (auto-evicts oldest)
+        self._recent_chars: deque = deque(maxlen=3)
         self.rng = random.Random()
 
     def get_delay(self, prev_char: Optional[str], next_char: str) -> float:
@@ -74,7 +76,7 @@ class TypingHumanizer:
 
         # --- Trigram adjustment ---
         if len(self._recent_chars) >= 2:
-            trigram = ''.join(self._recent_chars[-2:]) + next_char.lower()
+            trigram = ''.join(list(self._recent_chars)[-2:]) + next_char.lower()
             if trigram in TRIGRAM_SPEED:
                 delay *= TRIGRAM_SPEED[trigram]
 
@@ -105,8 +107,6 @@ class TypingHumanizer:
         # --- Bookkeeping ---
         self.chars_typed += 1
         self._recent_chars.append(next_char.lower())
-        if len(self._recent_chars) > 3:
-            self._recent_chars.pop(0)
 
         return delay
 
