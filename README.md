@@ -14,7 +14,7 @@ error injection with natural corrections, and PID-controlled WPM targeting.
 - **Fatigue simulation**: WPM gradually degrades over longer tests, modeling realistic human endurance
 - **Realistic error injection**: configurable typo rate using neighboring keys, with human-like reaction time before correction
 - **Anti-detection stealth**: randomized viewport, spoofed navigator properties, rotated user agents, disabled automation flags
-- **Multiple test modes**: supports words, time, quote, zen, and custom MonkeyType modes
+- **Multiple test modes**: drives the word-stream MonkeyType modes — `words`, `time`, and `quote`
 
 ## Installation
 
@@ -66,7 +66,7 @@ python -m automonkeytype --wpm 80 --errors 0.02
 |------|---------|-------------|
 | `--wpm` | `100` | Target words per minute |
 | `--errors` | `0.0` | Typo probability per keystroke (0.0-1.0) |
-| `--mode` | `words` | Test mode: words, time, quote, zen, custom |
+| `--mode` | `words` | Test mode: words, time, or quote |
 | `--count` | `50` | Word count (words mode) or seconds (time mode) |
 | `--headless` | off | Run browser without visible window |
 

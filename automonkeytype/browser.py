@@ -6,7 +6,6 @@ rotated user agents, and disabled automation flags.
 """
 
 import random
-from typing import Optional
 
 from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
 
@@ -51,9 +50,9 @@ class BrowserManager:
     def __init__(self, headless: bool = False):
         self.headless = headless
         self._pw = None
-        self._browser: Optional[Browser] = None
-        self._context: Optional[BrowserContext] = None
-        self._page: Optional[Page] = None
+        self._browser: Browser | None = None
+        self._context: BrowserContext | None = None
+        self._page: Page | None = None
 
     def launch(self) -> Page:
         """Launch browser and return the page object."""
@@ -88,9 +87,7 @@ class BrowserManager:
 
     def navigate(self, url: str = "https://monkeytype.com"):
         """Navigate to MonkeyType and wait for network idle."""
-        if self._page is None:
-            raise RuntimeError("Browser not launched — call launch() first")
-        self._page.goto(url, wait_until="networkidle", timeout=30000)
+        self.page.goto(url, wait_until="networkidle", timeout=30000)
 
     @property
     def page(self) -> Page:

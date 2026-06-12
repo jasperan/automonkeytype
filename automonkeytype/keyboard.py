@@ -7,7 +7,6 @@ the humanizer to produce realistic keystroke timing.
 
 import math
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 
 @dataclass(frozen=True)
@@ -31,7 +30,7 @@ def _key(row: int, col: int, finger: int, hand: str) -> KeyInfo:
 
 
 # fmt: off
-LAYOUT: Dict[str, KeyInfo] = {
+LAYOUT: dict[str, KeyInfo] = {
     # Row 0 — number row
     '`': _key(0, 0, 0, 'left'),
     '1': _key(0, 1, 0, 'left'),  '2': _key(0, 2, 1, 'left'),
@@ -89,14 +88,6 @@ def same_finger(a: str, b: str) -> bool:
     return ka.finger == kb.finger
 
 
-def same_hand(a: str, b: str) -> bool:
-    """Whether two keys are typed with the same hand."""
-    ka, kb = LAYOUT.get(a), LAYOUT.get(b)
-    if ka is None or kb is None:
-        return False
-    return ka.hand == kb.hand
-
-
 def hand_alternation(a: str, b: str) -> bool:
     """Whether typing b after a alternates hands (faster)."""
     ka, kb = LAYOUT.get(a), LAYOUT.get(b)
@@ -106,7 +97,7 @@ def hand_alternation(a: str, b: str) -> bool:
 
 
 # Neighboring keys for realistic typo generation
-QWERTY_NEIGHBORS: Dict[str, list] = {
+QWERTY_NEIGHBORS: dict[str, list[str]] = {
     'q': ['w', 'a'],
     'w': ['q', 'e', 'a', 's'],
     'e': ['w', 'r', 's', 'd'],

@@ -11,7 +11,6 @@ Produces inter-key delays that model realistic human typing dynamics:
 
 import random
 from collections import deque
-from typing import Optional
 
 from .keyboard import (
     key_distance,
@@ -64,7 +63,7 @@ class TypingHumanizer:
         self._recent_chars: deque = deque(maxlen=3)
         self.rng = random.Random()
 
-    def get_delay(self, prev_char: Optional[str], next_char: str) -> float:
+    def get_delay(self, prev_char: str | None, next_char: str) -> float:
         """Calculate delay in seconds before typing next_char."""
         delay = self.base_delay
 

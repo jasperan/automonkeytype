@@ -9,7 +9,6 @@ changes its DOM structure.
 """
 
 import time
-from typing import Dict, List, Optional
 
 from playwright.sync_api import Page
 
@@ -51,7 +50,6 @@ class MonkeyTypeScraper:
     SEL_MODE_BTN = 'button[mode="{mode}"]'
     SEL_WORDCOUNT_BTN = 'button[wordCount="{value}"]'
     SEL_TIMECOUNT_BTN = 'button[timeCount="{value}"]'
-    SEL_RESTART_BTN = "#restartTestButton"
 
     # Maps a test mode to the value-button selector template that mode uses.
     # Modes without a value group (quote, zen, custom) map to None.
@@ -118,19 +116,9 @@ class MonkeyTypeScraper:
                     f"matched value '{value}' ({val_sel}); using site default."
                 )
 
-    def restart_test(self):
-        """Press the restart button (Tab key works too)."""
-        btn = self.page.query_selector(self.SEL_RESTART_BTN)
-        if btn:
-            btn.click()
-            time.sleep(1)
-        else:
-            self.page.keyboard.press("Tab")
-            time.sleep(1)
-
     # --- Word extraction ---
 
-    def get_all_words(self) -> List[str]:
+    def get_all_words(self) -> list[str]:
         """Extract all words from the current test."""
         words = []
         word_elements = self.page.query_selector_all(self.SEL_WORD)
@@ -141,8 +129,12 @@ class MonkeyTypeScraper:
                 words.append(word)
         return words
 
-    def get_active_word(self) -> Optional[str]:
-        """Get the currently active (being typed) word."""
+    def get_active_word(self) -> str | None:
+        """Get the currently active (being typed) word.
+
+        Test-only helper: production runs drive typing positionally, but the
+        integration suite uses this to verify caret/focus behavior.
+        """
         active = self.page.query_selector(self.SEL_ACTIVE_WORD)
         if not active:
             return None
@@ -181,7 +173,7 @@ class MonkeyTypeScraper:
 
     # --- Results ---
 
-    def get_results(self) -> Dict[str, str]:
+    def get_results(self) -> dict[str, str]:
         """Scrape the results page after test completion."""
         results = {}
         for key, sel in self.RESULT_SELECTORS.items():

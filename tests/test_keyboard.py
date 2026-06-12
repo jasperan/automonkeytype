@@ -6,7 +6,6 @@ from automonkeytype.keyboard import (
     hand_alternation,
     key_distance,
     same_finger,
-    same_hand,
 )
 
 
@@ -52,15 +51,6 @@ def test_same_finger_ed():
 def test_same_finger_different():
     # a (left pinky) and s (left ring) are different fingers
     assert same_finger("a", "s") is False
-
-
-def test_same_hand_left():
-    assert same_hand("a", "s") is True
-    assert same_hand("q", "t") is True
-
-
-def test_same_hand_different():
-    assert same_hand("a", "j") is False
 
 
 def test_hand_alternation():

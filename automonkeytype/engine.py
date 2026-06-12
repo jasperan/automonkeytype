@@ -7,7 +7,6 @@ then report results.
 
 import random
 import time
-from typing import Optional
 
 from .browser import BrowserManager
 from .controller import WPMController
@@ -36,7 +35,7 @@ class TypingEngine:
         self.browser_mgr = BrowserManager(headless=headless)
         self.humanizer = TypingHumanizer(target_wpm, error_rate)
         self.controller = WPMController(target_wpm)
-        self.scraper: Optional[MonkeyTypeScraper] = None
+        self.scraper: MonkeyTypeScraper | None = None
 
     def run(self):
         """Execute the full typing session."""
@@ -68,7 +67,7 @@ class TypingEngine:
         time.sleep(2)
         self.scraper.dismiss_popups()
 
-    def _prepare_test(self) -> list:
+    def _prepare_test(self) -> list[str]:
         _print(f"Configuring: {self.mode} mode, {self.word_count}...")
         self.scraper.configure_test(self.mode, self.word_count)
         time.sleep(1)
@@ -84,7 +83,7 @@ class TypingEngine:
         time.sleep(0.5)
         return words
 
-    def _type_words(self, words: list):
+    def _type_words(self, words: list[str]):
         """Type all words with human-like timing and PID speed control."""
         page = self.browser_mgr.page
         prev_char = None
