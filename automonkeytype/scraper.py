@@ -21,7 +21,6 @@ class MonkeyTypeScraper:
     SEL_WORD = "div.word"
     SEL_ACTIVE_WORD = "div.word.active"
     SEL_LETTER = "letter"
-    SEL_CARET = "#caret"
 
     # Cookie / popup dismissal targets
     SEL_COOKIE_ACCEPT = [
@@ -118,13 +117,16 @@ class MonkeyTypeScraper:
 
     # --- Word extraction ---
 
+    def _word_text(self, word_el) -> str:
+        """Join a word node's letter elements into plain text."""
+        letters = word_el.query_selector_all(self.SEL_LETTER)
+        return "".join(letter.text_content() or "" for letter in letters)
+
     def get_all_words(self) -> list[str]:
         """Extract all words from the current test."""
         words = []
-        word_elements = self.page.query_selector_all(self.SEL_WORD)
-        for word_el in word_elements:
-            letters = word_el.query_selector_all(self.SEL_LETTER)
-            word = "".join(letter.text_content() or "" for letter in letters)
+        for word_el in self.page.query_selector_all(self.SEL_WORD):
+            word = self._word_text(word_el)
             if word:
                 words.append(word)
         return words
@@ -138,8 +140,7 @@ class MonkeyTypeScraper:
         active = self.page.query_selector(self.SEL_ACTIVE_WORD)
         if not active:
             return None
-        letters = active.query_selector_all(self.SEL_LETTER)
-        return "".join(letter.text_content() or "" for letter in letters)
+        return self._word_text(active)
 
     def get_active_word_index(self) -> int:
         """Get the 0-based index of the active word."""

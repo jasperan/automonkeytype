@@ -132,7 +132,7 @@ class TypingHumanizer:
         """Extra pause after punctuation (natural reading rhythm)."""
         if char in '.!?':
             return max(0.0, self.rng.gauss(0.06, 0.025))
-        elif char in ',;:':
+        if char in ',;:':
             return max(0.0, self.rng.gauss(0.03, 0.015))
         return 0.0
 
