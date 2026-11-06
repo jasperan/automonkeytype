@@ -8,9 +8,15 @@ Selectors are centralized here so they're easy to update if MonkeyType
 changes its DOM structure.
 """
 
+import re
 import time
 
 from playwright.sync_api import Page
+
+
+# C0/C1 control characters (incl. ESC, BEL, CR) and DEL: page text must never
+# reach the terminal as live escape sequences.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 
 
 class MonkeyTypeScraper:
@@ -180,5 +186,5 @@ class MonkeyTypeScraper:
         for key, sel in self.RESULT_SELECTORS.items():
             el = self.page.query_selector(sel)
             if el:
-                results[key] = (el.text_content() or "").strip()
+                results[key] = _CONTROL_CHARS.sub("", el.text_content() or "").strip()
         return results
